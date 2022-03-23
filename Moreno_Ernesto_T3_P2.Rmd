@@ -1,0 +1,91 @@
+---
+title: "Red booleana"
+author: "Moreno Juárez Ernesto"
+date: "21/3/2022"
+output: html_document
+---
+### Genera una red de regulación transcripcional, con 5 nodos y, al menos 7 interacciones regulatorias, escoge al menos 3 inhibiciones.  
+  
+#### A) Escribe las tablas de verdad de las reglas.
+```{r}
+#El siguiente documento hecho en texto plano, contiene las reglas para la generación de las tablas de verdad. 
+
+library(BoolNet) # Se necesita esta libreria para operar redes booleanas. 
+red_ernesto <-loadNetwork("Red B.txt")
+red_ernesto # La red contiene 5 genes los cuales son A B C D E. 
+
+```
+##### Interpretación de las reglas: El gen A necesita de B y que no este presente E; el gen B, necesita de E o D para activarse y que no este activo C; el gen C solo necesita de A; el gen D necesita de C y que no este activado E; el gen E se autorregula solo.  
+  
+    
+#### B) Escribe las reglas para generar una red de tipo Boolnet.  
+Table: Tabla de la verdad de A  
+  
+  | B | E | B AND NOT E |
+  |:-:|:-:|:-----------:|
+  | 0 | 0 | 0           |
+  | 0 | 1 | 0           |
+  | 1 | 0 | 1           |
+  | 1 | 1 | 0           |  
+    
+Table: Tabla de la verdad de B  
+  
+  | E | D | C | E OR D AND NOT C |
+  |:-:|:-:|:-:|:----------------:|
+  | 0 | 0 | 0 | 0                |
+  | 0 | 0 | 1 | 0                |
+  | 0 | 1 | 0 | 1                |
+  | 0 | 1 | 1 | 0                |
+  | 1 | 0 | 0 | 1                |
+  | 1 | 0 | 1 | 0                |
+  | 1 | 1 | 0 | 1                |
+  | 1 | 1 | 1 | 0                |  
+    
+Table: Tabla de la verdad de C  
+  
+  | A | A | C |
+  |:-:|:-:|:-:|
+  | 0 | 0 | 0 |
+  | 1 | 1 | 1 |  
+    
+Table: Tabla de la verdad de D  
+  
+  | C | E | C AND NOT E |
+  |:-:|:-:|:-----------:|
+  | 0 | 0 | 0           |
+  | 0 | 1 | 0           |
+  | 1 | 1 | 0           |
+  | 1 | 0 | 1           |  
+    
+Table: Tabla de la verdad de E  
+  
+  | E | E | E |
+  |:-:|:-:|:-:|
+  | 0 | 0 | 0 |
+  | 1 | 1 | 1 |  
+    
+#### C) Encuentra todos los atractores de la red.  
+  
+```{r}
+# Se utiliza la función getAttractors.
+atracE <- getAttractors(red_ernesto)
+atracE
+
+
+```
+  
+#### D) ¿Cuál sería el estado final más probable?  
+El estado final más probable es el del atractor 2, este cuenta con una cuenca de 16 estados. En la imagen se aprecia que corresponde al del color cafe.  
+  
+#### E) Dibuja todos los estados y sus atractores.  
+```{r}
+# Hcemos una visualización de la red con los atractores correspondientes.
+plotStateGraph(atracE)
+```
+
+  
+  
+  
+  
+  
+

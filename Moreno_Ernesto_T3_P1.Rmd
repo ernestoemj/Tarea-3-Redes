@@ -1,0 +1,296 @@
+---
+title: "Biblioteca WGCNA"
+author: "Moreno Juárez Ernesto"
+date: "20/3/2022"
+output: html_document
+---
+## A) Instalación de la biblioteca WGCNA.  
+Nota: Para este paso, previamente la libreria "WGCNA" ya se instaló. Por lo que
+solamente se cargará la librería. La forma de instalar la biblioteca, es con el
+soguiente comando: install.packages("WGCNA")
+
+## B) Sigue el tutorial, ve corriendo lo que marca el tutorial para la construcción de una red de co expresion.   
+  
+##### Preliminares y entrada de datos.
+
+```{r}
+library(WGCNA) # Cargar la librería. 
+femData = read.csv("LiverFemale3600.csv"); # Esta ejecución, se hizo para leer la base de datos con la que se va a trabajar. 
+
+```
+  
+  
+```{r}
+# Los siguientes comandos se ejecutan para poder explorar la base de datos. 
+dim ( femData ); # Total de filas y columnas. Hay 3600 genes
+names ( femData ); # Me esta mostrando todas las columnas. 
+names(femData)[1:8] # Con este solamente estoy viendo los nombres de las columnas con base en la información establecida en la base de datos. Aquí podemos corroborar la existencia de columnas que reflejan el locus del gen, el simbolo del gen. el cromosoma entre otros datos. 
+```
+    
+    
+```{r}
+# Los siguientes comandos van a eliminar datos auxiliares que no se necesitan para el posterior análisis. 
+datExpr0 = as.data.frame(t(femData[, -c(1:8)])); # Estoy eliminando las primeras 8 columnas. Esto se hace debido a que para el análisis, no se necesita esta información dado que no nos indica mucho acerca de la expresión de los genes sometidos a diferentes experimentos. Esto se puede entender mejor al verificar en la parte de arriba en donde se muestran las 8 primeras columnas y su información referente. 
+names(datExpr0) = femData$substanceBXH; 
+rownames(datExpr0) = names(femData)[-c(1:8)];
+```
+  
+    
+```{r}
+#Los siguientes comandos son para detectar anomalías en cuanto a la expresión de genes.
+gsg = goodSamplesGenes(datExpr0, verbose = 3);
+gsg$allOK
+
+```
+  
+    
+```{r}
+#
+sampleTree = hclust(dist(datExpr0), method = "average");
+par(cex = 0.5);
+par(mar = c(0,2,1,0))
+plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5,
+cex.axis = 1.5, cex.main = 2)
+abline(h = 15, col = "red")
+
+
+```
+  
+    
+```{r}
+#
+clust = cutreeStatic(sampleTree, cutHeight = 15, minSize = 10)
+table(clust)
+
+```
+  
+    
+```{r}
+#
+keepSamples = (clust==1)
+datExpr = datExpr0[keepSamples, ]
+nGenes = ncol(datExpr)
+nSamples = nrow(datExpr)
+
+```
+  
+### Parte 2
+```{r}
+traitData <- read.csv("ClinicalTraits.csv")
+dim(traitData)
+names(traitData)
+
+```
+  
+```{r}
+#
+allTraits = traitData[, -c(31, 16)]
+allTraits = allTraits[, c(2, 11:36) ]
+dim(allTraits)
+names(allTraits)
+```
+  
+```{r}
+femaleSamples = rownames(datExpr)
+traitRows = match(femaleSamples, allTraits$Mice)
+datTraits = allTraits[traitRows, -1]
+rownames(datTraits) = allTraits[traitRows, 1]
+
+collectGarbage()
+
+
+```
+   
+    
+```{r}
+#
+sampleTree2 = hclust(dist(datExpr), method = "average")
+traitColors = numbers2colors(datTraits, signed = FALSE)
+plotDendroAndColors(sampleTree2, traitColors,
+groupLabels = names(datTraits),
+main = "Sample dendrogram and trait heatmap")
+
+save(datExpr, datTraits, file = "FemaleLiver-01-dataInput.RData") #Necesitamos guardar el fragmento del codigo generado
+```
+   
+      
+##### Construcción automática de redes y detección de módulos.   
+  
+```{r}
+lnames = load(file = "FemaleLiver-01-dataInput.RData"); # Datos generados en la primera parte, estos se ocupan para el desarrollo de este ejericio.
+
+powers = c(c(1:10), seq(from = 12, to=20, by=2)) # Ajustando los valores del umbral "Soft Power"
+
+sft = pickSoftThreshold(datExpr, powerVector = powers, verbose = 5) # Esta linea, permite hacer el análisis topológico de la red.
+
+# Plotear los resultados de la red. 
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2));
+cex1 = 0.9; # Estos comandos fueron escritos para el ajuste de la imagen. 
+
+## Indice del ajuste de la topologpia tipo free-scale con base en el soft power. 
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red"); abline(h=0.90,col="red") # Se hace un corte para poder separar los datos al momento de obtener el grafo y querer hacer un análisis.
+
+
+
+
+```
+```{r}
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+```
+  
+##### Construcción de redes de genes e indetificación de modulos. 
+```{r}
+net = blockwiseModules(datExpr, power = 6,
+TOMType = "unsigned", minModuleSize = 30,
+reassignThreshold = 0, mergeCutHeight = 0.25,
+numericLabels = TRUE, pamRespectsDendro = FALSE,
+saveTOMs = TRUE,
+saveTOMFileBase = "femaleMouseTOM",
+verbose = 3)
+
+table(net$colors) # Me esta mostrando los modulos creados con base en la función de arriba por la cual se indentificaron estos. 
+
+```
+  
+```{r}
+# Dendograma resultante de la construcción del módulo y la agrupación de los genes.
+sizeGrWindow(12, 9) # Ajustar el dendograma a mi ventana. 
+
+mergedColors = labels2colors(net$colors) # Ajustar los colores de las etiquetas para el trazado.
+```
+
+
+```{r}
+plotDendroAndColors(net$dendrograms[[1]], mergedColors[net$blockGenes[[1]]],
+"Module colors",
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05) # Linea de comando para la creación del dendograma.
+```  
+
+```{r}
+# Se necesitan guardar los resultados obtenidos de esta parte como los resultados del dendograma y la indentifiación de los modulos.
+moduleLabels = net$colors
+moduleColors = labels2colors(net$colors)
+MEs = net$MEs;
+geneTree = net$dendrograms[[1]];
+save(MEs, moduleLabels, moduleColors, geneTree,
+     file = "FemaleLiver-02-networkConstruction-auto.RData")
+```
+  
+    
+#### Relación de los modulos con información externa e indentificación de genes clave.
+```{r}
+lnames = load(file = "FemaleLiver-01-dataInput.RData");
+lnames
+lnames = load(file = "FemaleLiver-02-networkConstruction-auto.RData");
+lnames
+
+```
+  
+##### Cuantifiación de ponderación de la asociación módulo-rasgo.
+```{r}
+#Los siguientes comandos son implementados para definir el número de genes y muestras con las que se van a trabajar. 
+nGenes = ncol(datExpr);
+nSamples = nrow(datExpr);  
+
+MEs0 = moduleEigengenes(datExpr, moduleColors)$eigengenes
+MEs = orderMEs(MEs0)
+moduleTraitCor = cor(MEs, datTraits, use = "p");
+moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples); # Un re-calculo de los ME con las correspondientes etiquetas de color. 
+```
+  
+```{r}
+
+# Visualización de la asociación módulo-rasgo ya descrita en el código anterior. 
+sizeGrWindow(10,6)
+textMatrix = paste(signif(moduleTraitCor, 2), "\n(",
+signif(moduleTraitPvalue, 1), ")", sep = "");
+dim(textMatrix) = dim(moduleTraitCor)
+par(mar = c(6, 8.5, 3, 3));
+
+```
+
+```{r}
+labeledHeatmap(Matrix = moduleTraitCor,
+xLabels = names(datTraits),
+yLabels = names(MEs),
+ySymbols = names(MEs),
+colorLabels = FALSE,
+colors = greenWhiteRed(50),
+textMatrix = textMatrix,
+setStdMargins = FALSE,
+cex.text = 0.5,
+zlim = c(-1,1),
+main = paste("Module-trait relationships")) # Cada gen propio del módulo y su coeficiente de correlación se representan aquí. Dado que tenemos muchos códigos de colores, ayuda a la interpretación de la trama.
+```
+  
+##### Relación del gen con los módulos y el significado.
+```{r}
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+
+modNames = substring(names(MEs), 3)
+```  
+
+```{r}
+geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"));
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
+
+names(geneModuleMembership) = paste("MM", modNames, sep="");
+names(MMPvalue) = paste("p.MM", modNames, sep="");
+
+geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"));
+GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+
+names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
+names(GSPvalue) = paste("p.GS.", names(weight), sep="");
+
+```
+  
+    
+##### Análisis intramodular: identificación de genes con alta GS y MM.
+```{r}
+module = "brown"
+column = match(module, modNames);
+moduleGenes = moduleColors==module;
+
+```  
+
+```{r}
+sizeGrWindow(7, 7);
+par(mfrow = c(1,1));
+verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+
+abs(geneTraitSignificance[moduleGenes, 1]),
+xlab = paste("Module Membership in", module, "module"),
+ylab = "Gene significance for body weight",
+main = paste("Module membership vs. gene significance\n"),
+cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+```
+  
+## C) Cuestionario:  
+  
+####### ¿En dónde esta el objeto matriz de expresión y de que dimensión es?  
+  
+####### ¿Por qué se eliminan datos que son demasiados distintos?  
+El valor eliminado corresponde al de la muestra F2_221, como se muestra en el análisis este es un valor atípico en comparación con la agrupación de los genes con las muestras como se fue desarrollando en el código. Podríamos plantear la hipótesis de que esta muestra es eliminada dado que los niveles de expresión de los diferentes genes sometidos a esta muestra no tuvieron ninguna relación con laa demás que permitiera suponer que puede seguir un proceso de expresión como se ha visto con los demás genes. Hay que aclarar que de todas las muestras solo esta fue la eliminada, probablemente se hizo para que no causará interferencia en los análisis y además lo ya mencionado, que su perfil de expresión no encajaba con ninguno.  
+
+####### ¿Qué criterio utilizan para generar la red, es decir explica el significado de la variable softPower?  
+Como es una red ponderada es decir que les interesa ver que tanto es el nivel de expresión y como se conectan con base en, los experimentos o muestras. Para construir esta red se debe de establecer un umbral que en este caso es el softpower, con esto se calcula los parámetros para la matriz de adyacencia. Lo que se hizo fue multiplicar los coeficientes de la correlación de los genes para poder obtener el valor. 
+  
+####### ¿Por qué crees que genes que pertenencen al mismo clúster son relevantes?.  
+Para esta pregunta podemos destacar algo importante del hígado, este en un órgano perenquimatoso, es decir con muchos tipos de células. Se puede partir que los diferentes genes que pertenecen a los diversos clusters, tienen una función específica, recordando siempre que el hígado al ser un órgano lleno de mucha milticeluaridad en términos de diferentes tipos de células, cada una va a expresar diferentes genes para poder regular diferentes procesos.  
+
+####### Discute algunos de los resultados que te parezcan interesantes de los clúster y su relación con los metadatos.   
+   
+     
+####### Nota: Faltaron las últimas dos partes del tutorial, mi computadora ya quería correr nada, tuve que quitarle partes para poder tejer el documento. Pero se pudo hacer más de la mitad. :)
+

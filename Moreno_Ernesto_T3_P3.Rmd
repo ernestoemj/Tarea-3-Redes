@@ -1,0 +1,186 @@
+---
+title: "Red de Co-gustos"
+author: "Moreno Juárez Ernesto"
+date: "21/3/2022"
+output: html_document
+---
+### A partir de las dos versiones de la red de co-gustos: la dicotómica y la pesada. Elabora un programa en R que calcule:  
+  
+#### A) Base de datos.  
+  
+```{r}
+gustos<-read.csv("Red de co-gustos 2022 - Hoja 1.csv") #cargar la base de datos
+#Nota: Antes de trabajar con la base de datos, se hacen diferentes arreglos a la base para poder tener una mejor manipulación de los datos. Esta parte del código, fue tomada del código creado en la clase de la red de co-gustos. 
+row.names(gustos)<-gustos[,1] # Asigne los gustos a la primera columna
+
+gustos<-gustos[,-1] # Quito la primera columna, se repite
+
+mat_cor<-cor(t(gustos)) # Se hizo una transposición y luego calcula correlación.  
+View(mat_cor) # Se ve una pre-visualización de las correlaciones. 
+
+diag(mat_cor)<-0 # Quitar los 1 en la diagonal que corresponde a la misma persona comparada consigo mismo,  para tener un mejor análisis
+View(mat_cor) # Confirmo si todos los arreglos hechos a la base de datos, nos van a permitir manipular y trabajar con estos. 
+
+
+
+
+```
+  
+    
+#### B) Dibuja la red con al menos tres layouts D Y P.  
+```{r}
+# DICOTOMICA:
+
+mat_ady<-(1+mat_cor)/2 # Esto es para hacer la matriz de adyacencia
+#se necesita hacer la matriz de adyacencia par ajustar datos. 
+View(mat_ady)  #matriz de adyacencia sin los negativos.
+diag(mat_ady)<-0 # Asignar 0 a los datos de la diagonal. 
+View(mat_ady)
+
+mat_ady_1<-ifelse(mat_ady>0.5,1,0) # Colocar los valores de 0 y 1
+View(mat_ady_1)
+
+library(igraph) # Para la manipulación y graficos de la red
+
+# Layouts
+
+redco <- graph_from_adjacency_matrix(mat_ady_1,mode = "undirected")
+
+plot(redco, layout=layout_as_star) # Estilo 1
+
+plot(redco, layout=layout.davidson.harel) # Estilo 2
+
+plot(redco, layout=layout_with_mds) # Estilo 3 
+
+
+
+```
+  
+    
+```{r}
+# PESADA: 
+mat_ady_pesada<-(1+mat_cor)/2 # Ajusto mis valores de acuerdo a los datos de correlación calculados. 
+View(mat_ady_pesada) # verificar que el ajusto sea el correcto. Se tiene que checar para poder trabajar con los datos pesados de la red. 
+
+diag(mat_ady_pesada)<- 0 # Necesitamos colocar el 0 para que los datos que corresponden a las personas que se comparan entre si mismos. no causen problemas al momento de modelar la red.
+
+View(mat_ady_pesada) # Comprobar si los datos son correctos con todo y el 0 establecido en la diagonal.
+
+# Layouts
+
+redcoP <- graph_from_adjacency_matrix(mat_ady_pesada,mode = "undirected",weighted = TRUE)
+E(redcoP)$color<-"black" # El color negro nos permite ver la relación de la conexión, es decir que tan conectados estan los nodos. Negro más intenso significa mayor conexión, un negro menos intenso nos indica una menor conexión. 
+plot(redcoP, edge.width=E(redcoP)$weight)
+
+
+plot(redcoP, layout=layout_randomly) # Estilo 1
+
+plot(redcoP, layout= layout_components) # Estilo 2
+
+plot(redcoP, layout= layout.mds)# Estilo 3
+
+
+```
+  
+#### C) Distribución de conectividades Dicotómica 
+```{r}
+degree(redco)
+
+```
+  
+#### D) Los nodos más conectados Dicotómica.  
+```{r}
+masc <- degree(redco)
+sort(masc, decreasing = TRUE)
+
+
+
+```
+  
+#### E) Los nodos más importantes con al menos tres medidas de centralidad (D).  
+```{r}
+med1<- centralization.closeness(redco) 
+med1
+
+med2<- centr_eigen(redco)
+med2
+
+med3<- centr_degree(redco)
+med3
+
+```
+  
+    
+#### F) Los clústers obtenidos con al menos tres métodos de clusterización D y P.  
+```{r}
+## DICOTÓMICA:
+View(mat_ady_1)
+
+# MET 1
+cluster1<-cluster_edge_betweenness(redco,directed = FALSE) # Método 1
+table(membership(cluster1))
+
+plot(cluster1,redco)
+
+# MET 2
+
+cluster2 <- cluster_fast_greedy(redco)
+table(membership(cluster2))
+plot(cluster2,redco)
+
+# MET 3
+
+cluster3 <- cluster_walktrap(redco)
+table(membership(cluster3))
+plot(cluster3,redco)
+
+
+
+```
+  
+```{r}
+## PESADA:
+View(mat_ady_pesada)
+
+# MET 1
+cluster1P<-cluster_spinglass(redcoP) # Método 1
+table(membership(cluster1P))
+
+plot(cluster1P,redcoP)
+
+# MET 2
+
+cluster2P <- cluster_label_prop(redcoP) # Método 2
+table(membership(cluster2P))
+plot(cluster2P,redcoP)
+
+# MET 3
+
+cluster3P <- cluster_louvain(redcoP) #Método 3
+table(membership(cluster3P))
+plot(cluster3P,redcoP)
+```
+ 
+    
+#### G) Discute si las redes D y P son dirigidas o no.  
+No son dirigidas. Esto lo sabemos debido a que no existen como tal en la red, nodos que regulen a otros. En este caso simplemente se esta tomando en cuenta el grado de conexión que pueden tener las personas entre si, con base en, sus gustos. Por lo que las redes mostradas no tienen dirección.  
+  
+#### H) ¿Cómo podrías encontrar clicas, si las hay?
+Con la función de cliques. También podríamos ocupar otras funciones como:
+cliques() : Encuentra todas las posibles clicas  
+
+largest.cliques() : Clicas más grandes de la red.  
+
+max_cliques() : Encuentra las clicas máximas existentes.  
+
+clique_num() : Calcula el tamaño de las clicas. 
+```{r}
+## CONTANDO CLICAS: 
+count_max_cliques(redco) # Este nos indica cuantas clicas hay, en total, por ejemplo para la red dicotómica se tienen 103 clicas. 
+
+
+
+
+```
+Las clicas, basicámente son aquellos grupos en la red en la que todos los nodos estan conectados entre sí. Dificilmente en una red como la ilustrada, se podría apreciar las clicas,dado el nivel de conexiones. Por lo que implementando la función de cliques() obtenemos que nodos-personas, pertenecen a una clica específica. En redes mucho más pequeñas se podría identificar fácilmente las clicas, dada la representación visual.  
+

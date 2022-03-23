@@ -1,0 +1,251 @@
+---
+title: "Red de señalización"
+author: "Moreno Juárez Ernesto"
+date: "21/3/2022"
+output: html_document
+---
+### A partir de la red de señalización mostrada en la figura 1.  
+  
+#### A) Elabora una representación verbal de la red. 
+La red mostrada en la figura, ilustra la cascada de señalización de una planta,
+libera una hormona (ácido abscísico) ante la sequía. El resultado de esta cascada
+es el cierre de los estomas. La representación verbal de todas las moleculas así
+como iones que intervienen en la cascada es la siguiente:  
+CIS necesita de tres elementos para poder encender, estos son cGMP, cADPR y InsP3.En el caso de cGMP solo necesita GC. Para cADPR se ocupa ADPRc. Por otro lado InsP3 solo tiene como regulador a PLC. NO es clave ya que permite regular a GC y ADPRc. A su vez NO es regulado por NOS. El Ca2+ regula a NOS y PLC. Ca2+ se encarga de regular a NOS, Ca2+ ATPase, Anion EM pero este también puede desactivar a H+ ATPase. De esta forma con base en las reglas escritas a abajo es como la red sigue.
+  
+  
+|            Reglas             |
+|:-----------------------------:|
+| Cis: cGMP AND cADPR AND InsP3 |
+| cGMP: Gc                      |
+| cADPR: ADPRc                  |
+| InsP3: PLC                    |
+| Gc: NO                        |
+| ADPRc: NO                     |
+| PLC: Ca2+                     |
+| NO: NOS                       |
+| NOS: Ca2+                     |
+| Ca2+: CIS AND CalM AND NOT Ca2+ ATPase |
+| Ca2+ATPase: Ca2+              |
+| CalM: NOT Depolar             |
+| KEV: Ca2+                     |
+| H+ ATPase: NOT Ca2+           |
+| Anion EM: Ca2+                |
+| Closure: Anion EM AND Kout AND KAP |
+| Kout: Depolar                 |
+| KAP: Depolar                  |
+| Depolar: KEV AND Ca2+ AND Anion EM AND NOT H+ ATPase OR NOT Kout |
+  
+    
+#### B) Elabora una tabla de posibles reglas de la red.  
+  
+Table: Tabla de la verdad de cis.  
+  
+  | cGMP | cADPR | InsP3 | cGMP AND cADPR AND InsP3 | 
+  |:----:|:-----:|:-----:|:------------------------:|
+  | 0    | 0     | 0     | 0                        |
+  | 0    | 0     | 1     | 0                        |
+  | 0    | 1     | 0     | 0                       |
+  | 0    | 1     | 1     | 0                        |
+  | 1    | 0     | 0     |  0                  |
+  | 1    | 0     | 1     |  0                       |
+  | 1    | 1     | 0     |   1                      |
+  | 1    | 1     | 1     |    0                   |  
+  
+  
+Table: Tabla de la verdad de cGMP.  
+  
+  | Gc | GC | cGMP |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de cADPR.  
+  
+  | ADPRc | ADPRc | cADPR |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de InsP3.  
+  
+  | PLC | PLC | InsP3 |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de Gc.  
+  
+  | NO | NO | Gc   |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de ADPRc. 
+  
+  | NO | NO | ADPRc|
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de PCL.  
+  
+  | Ca2+ | Ca2+ | PCL |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de NO.  
+  
+  | NOS | NOS | NO |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de NOS. 
+  
+  | Ca2+ | Ca2+ | NOS |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de Ca2+.  
+  
+  | CIS  | CalM  | Ca2+ ATPase | CIS AND CalM AND NOT Ca2+ ATPase| 
+  |:----:|:-----:|:-----------:|:-------------------------------:|
+  | 0    | 0     | 0           | 0                               |
+  | 0    | 0     | 1           | 0                               |
+  | 0    | 1     | 0           | 0                               |
+  | 0    | 1     | 1           | 0                               |
+  | 1    | 0     | 0           | 0                               |
+  | 1    | 0     | 1           | 0                               |
+  | 1    | 1     | 0           | 1                               |
+  | 1    | 1     | 1           | 0                               |  
+    
+
+Table: Tabla de la verdad de Ca2+ ATPase.  
+  
+  
+  | Ca2+ | Ca2+ | Ca2+ ATPase |
+  |:--:|:--:|:----:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+   
+Table: Tabla de la verdad CalM.  
+  
+  | Depolar | Depolar | NOT Depolar |
+  |:--------|:-------:|:-----------:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |   
+    
+Table: Tabla de la verdad KEV.  
+  
+  | Ca2+ | Ca2+ | KEV |
+  |:----:|:----:|:---:|
+  | 0    | 0    | 0   |
+  | 1    | 1    | 1   |
+    
+Table: Tabla de la verdad H+ ATPase.  
+  
+  | Ca2+    | Ca2+    | NOT Ca2+    |
+  |:--------|:-------:|:-----------:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de AnionEM.  
+  
+  | Ca2+    | Ca2+    | AnionEM |
+  |:--------|:-------:|:-------:|
+  | 0  | 0  |  0   |
+  | 1  | 1  | 1    |  
+    
+Table: Tabla de la verdad de Closure.  
+
+  
+  | AnionEM | Kout | KAP | AnionEM AND Kout AND KAP |
+  |:----:|:-----:|:-----:|:------------------------:|
+  | 0    | 0     | 0     | 0                        |
+  | 0    | 0     | 1     | 0                        |
+  | 0    | 1     | 0     | 0                        |
+  | 0    | 1     | 1     | 0                        |
+  | 1    | 0     | 0     | 0                        |
+  | 1    | 0     | 1     | 0                        |
+  | 1    | 1     | 0     | 1                        |
+  | 1    | 1     | 1     | 0                        | 
+   
+    
+Table: Tabla de la verdad de Kout.  
+  
+  | Depolar | Depolar | Kout |
+  |:-------:|:-------:|:----:|
+  | 0    | 0    | 0   |
+  | 1    | 1    | 1   |
+    
+Table: Tabla de la verdad de KAP.  
+  
+  | Depolar | Depolar | KAP |
+  |:-------:|:-------:|:---:|
+  | 0    | 0    | 0   |
+  | 1    | 1    | 1   |  
+    
+Table: Tabla de la verdad de Depolar.  
+  
+  | KEV | Ca2+ | AnionEM | H+ ATPase | KOUT | KEV AND Ca2+ AND AnionEM AND NOT H+ ATPase OR NOT KOUT |
+  |:---:|:-----|:-------:|:---------:|:----:|:------------------------------------------------------:|
+| 1   | 0    | 0       | 0         | 0    | 0                                                      |
+| 1   | 0    | 0       | 0         | 1    | 0                                                      |
+| 1   | 0    | 0       | 1         | 0    | 0                                                      |
+| 1   | 0    | 0       | 1         | 1    | 0                                                      |
+| 1   | 0    | 1       | 0         | 0    | 0                                                      |
+| 1   | 0    | 1       | 0         | 1    | 0                                                      |
+| 1   | 0    | 1       | 1         | 0    | 0                                                      |
+| 1   | 0    | 1       | 1         | 1    | 0                                                      |
+| 1   | 1    | 0       | 0         | 0    | 0                                                      |
+| 1   | 1    | 0       | 0         | 1    | 0                                                      |
+| 1   | 1    | 0       | 1         | 0    | 0                                                      |
+| 1   | 1    | 0       | 1         | 1    | 0                                                      |
+| 1   | 1    | 1       | 0         | 0    | 1                                                      |
+| 1   | 1    | 1       | 0         | 1    | 0                                                      |
+| 1   | 1    | 1       | 1         | 0    | 0                                                      |
+| 1   | 1    | 1       | 1         | 1    | 0                                                      |
+| 0   | 0    | 0       | 0         | 0    | 0                                                      |
+| 0   | 1    | 0       | 0         | 0    | 0                                                      |
+| 0   | 0    | 1       | 0         | 0    | 0                                                      |
+| 0   | 0    | 0       | 1         | 0    | 0                                                      |
+| 0   | 0    | 0       | 0         | 1    | 0                                                      |
+| 0   | 0    | 0       | 1         | 1    | 0                                                      |
+| 0   | 0    | 1       | 1         | 1    | 0                                                      |
+| 0   | 1    | 1       | 1         | 1    | 0                                                      |
+| 0   | 1    | 1       | 0         | 0    | 0                                                      |
+| 0   | 1    | 1       | 1         | 0    | 0                                                      |
+| 0   | 1    | 0       | 1         | 1    | 0                                                      |
+| 0   | 1    | 1       | 0         | 1    | 0                                                      |
+| 0   | 1    | 0       | 0         | 0    | 0                                                      |
+| 0   | 1    | 0       | 0         | 1    | 0                                                      |
+| 0   | 1    | 0       | 1         | 0    | 0                                                      |
+| 0   | 0    | 1       | 0         | 1    | 0                                                      |
+  
+  
+   
+#### C) Encuentra y discute biológicamente el significado de los atractores (Usa BoolNet)
+```{r}
+library(BoolNet)
+red_hormona <- loadNetwork("Red hormona.txt")
+red_hormona
+```
+
+
+```{r}
+atrac_hormona <- getAttractors(red_hormona)
+atrac_hormona
+
+
+```
+  
+##### Discusión atractores:
+Como se observa, al momento de obtener los atractores de la red y con base en las reglas establecidas al principio. Se cuenta únicamente con un atractor compuesto de 4 estados. Este atractor tiene una cuenca de 524288. Al hacer el análisis del atractor, se aprecia que en los 4 estados se mantiene prendido la proteína 
+H+ ATPase. La interpretación dada es que en la cascada,esta inhibe a depolar, podriamos considerar que depolar es un regulador antagonista de la casda, ya que, al estar activo depolar, este va a silenciar a CalM. CalM va a ser vital para poder activar las moléculas aguas arriba de Ca2+. Sin embargo, Ca2+ puede inhibir a a nuestra molécula maestra H+ ATPase, por lo que se puede plantear la hipótesis que al activar a AnionEM, dado el seguimiento de la cascada, puede funcionar como un sensor entre los niveles de expresión de la cascada es decir, que tanto esta respondiendo ante la liberación del ácido abscísico. Otro punto importante es que Ca2+ se puede autorregular por medio de Ca2+ ATPase. En conclusión la presencia de H+ ATPase es vital para poder permitir que CalM no se desactivado y así poder hacer la cascada de señalización. 
+  
+  
+  
+

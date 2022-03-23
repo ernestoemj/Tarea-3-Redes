@@ -1,0 +1,6 @@
+targets, factors
+A, B & !E
+B, E | D & !C
+C, A
+D, C & !E
+E, E
